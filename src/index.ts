@@ -41,7 +41,7 @@ export interface TaskBehavior {
   maxReties?: number;
 }
 
-interface JobConfig {
+export interface JobConfig {
   name: string;
   tasks: TaskConfiguration[];
 }
