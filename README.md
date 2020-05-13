@@ -4,8 +4,8 @@ A group of "tasks" is called a "job" which we use to organize them. Note that th
 
 # Use case
 Why did I make it and where did I use this? well there are several encounters I had wherein certain "stuffs" will require some delays before you call the next one. 
-an example of these includes API calls where they use rate limitters and will block your IP or machine from creating calls temporarilly (or permanently).
-Another use case is where you want need something like a cron like task that runs over a certain period of time until all tasks are completed.
+an example of these includes API calls where they use rate limitters and will block your IP or machine from creating calls temporarilly (or permanently) if you seem to spam the service even if its a valid request.
+Another use case is where you want need something like a cron-like task that runs over a certain period of time until all tasks are completed.
 
 # Features
 * Allows creating multiple task groups (called "jobs") on a single instance
@@ -74,35 +74,31 @@ const tasks = new TaskManager({
   skipItemOnFail: true,
 });
 ```
-|CONFIG ITEM| DESCRIPTION | DEFAULT|
-|-|-|-|-|
-|doNotBreakOnError|Indicates that the job should not fail just because a task function threw an error .|false|
-|maxReties|The maximum retries a task can render before it is considered a failed task|0|
-|skipItemOnFail|Allows skipping an item if it fails and just continue to the next task|false|
+* doNotBreakOnError (false) - Indicates that the job should not fail just because a task function threw an error .
+* maxReties (default 0) - The maximum retries a task can render before it is considered a failed task.
+* skipItemOnFail (default false) - Allows skipping an item if it fails and just continue to the next task.
 
 How these 3 behaviors tie up is explained below
 1. If a task (function) throws an error, it will check doNotBreakOnError (default false)
-  1.1 If doNotBreakOnError is truthy, it will just assume that the task has failed **but was handled** and thus ***succeeded*** (or we do not care of its output)
-  1.2 If false, this will render the job as fails and counts towards a failed attempt
+    1. If doNotBreakOnError is truthy, it will just assume that the task has failed **but was handled** and thus ***succeeded*** (or we do not care of its output)
+    2. If false, this will render the job as fails and counts towards a failed attempt
 2. If a task fails it will check if it has maxRetries
-  2.1 If it has maxRetries, try the task again and increment the attempt count
-  2.2 If it has no maxRetires set (default value 0) or it has reached its limit, go to the next step
+    1. If it has maxRetries, try the task again and increment the attempt count
+    2. If it has no maxRetires set (default value 0) or it has reached its limit, go to the next step
 3. Check if the skipItemOnFail is truthy (defaults to false)
-  3.1 If its truthy then proceed to the next task in the job list
-  3.2 If its false then invoke an Error that the maximum retry has been breached and terminate the entire job.
+    1. If its truthy then proceed to the next task in the job list
+    2. If its false then invoke an Error that the maximum retry has been breached and terminate the entire job.
 
 The next thing we did is add a new Job entry. A job entry consists of a name (which is the unique key identifier) and an array of "Task Configurations". 
 These configurations require a function only as a requirement. this is the very function that will be triggered when the Job execution has activated it.
 It also has other optional properties that you can set to change how the task is handled
-|CONFIG ITEM| DESCRIPTION | DEFAULT|
-|-|-|-|-|
-|delay|The ammount of time delay from the previous task completed before this task will activate|0|
-|data|The data object that will be passed to the function which allows us to modify the function behavior|undefined|
-|function|The asynchronous function that will be called when the time is right. The data value can be passed here if provided|undefined|
-|behavior|This is an object similar to the configuration for the TaskManager. This however aims to override the default behaviors set only for that specific task|undefined|
+* delay (default 0)-The ammount of time delay from the previous task completed before this task will activate
+* data (default undefined)- The data object that will be passed to the function which allows us to modify the function behavior
+* function (default undefined)- The asynchronous function that will be called when the time is right. The data value can be passed here if provided
+* behavior (default undefined) - This is an object similar to the configuration for the TaskManager. This however aims to override the default behaviors set only for that specific task
 
 # Events
-If you need to handle during each events happening in the TaskManager, subscribe to its EventEmitter. The names are already self explanatory and their key constants can be found in the **Events** enumeration object.
+If you need to handle certain things during each events triggering in the TaskManager, subscribe to its EventEmitter. The names are already self explanatory and their key constants can be found in the **Events** enumeration object.
 
 ```
 import TaskManager, { Events } from './TaskManager';
