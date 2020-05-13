@@ -1,4 +1,4 @@
-import TaskManager, { Events } from './TaskManager';
+import TaskManager, { Events } from './index';
 
 let tasks: TaskManager;
 

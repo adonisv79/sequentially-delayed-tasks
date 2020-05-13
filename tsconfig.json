@@ -2,15 +2,11 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
-    "lib": [
-      "es2015",
-      "es2016",
-      "dom"
-    ],
+    "lib": [ "es2015" ],
     "strict": true,
-    "declaration": false, // no need as this is not a library
-    "sourceMap": false, // no need as this is not a library
-    // "sourceRoot": "src",
+    "declaration": true,
+    "sourceMap": true,
+    "sourceRoot": "src",
     "removeComments": true,
     "preserveConstEnums": true,
     "esModuleInterop": true,

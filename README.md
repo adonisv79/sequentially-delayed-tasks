@@ -5,7 +5,7 @@ A group of "tasks" is called a "job" which we use to organize them. Note that th
 # Use case
 Why did I make it and where did I use this? well there are several encounters I had wherein certain "stuffs" will require some delays before you call the next one. 
 an example of these includes API calls where they use rate limitters and will block your IP or machine from creating calls temporarilly (or permanently) if you seem to spam the service even if its a valid request.
-Another use case is where you want need something like a cron-like task that runs over a certain period of time until all tasks are completed.
+Another use case is where you need something like a cron-like task that runs over a certain period of time until all tasks are completed.
 
 # Features
 * Allows creating multiple task groups (called "jobs") on a single instance
@@ -21,7 +21,7 @@ npm i sequentially-delayed-tasks --save
 ```
 in your TS file, write the following
 ```
-import TaskManager from './TaskManager';
+import TaskManager from 'sequentially-delayed-tasks';
 
 const tasks = new TaskManager();
 

@@ -1,8 +1,12 @@
 {
   "name": "sequentially-delayed-tasks",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "A tool used to run several tasks (function) in sequence with retry logic and allows us to set delays before the next task will trigger",
-  "main": "index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist/src"
+  ],
   "scripts": {
     "test": "jest"
   },
