@@ -28,6 +28,12 @@ export enum Events {
   TaskFailed = 'task_failed',
 }
 
+export interface TaskBehavior {
+  doNotBreakOnError?: boolean;
+  skipItemOnFail?: boolean;
+  maxReties?: number;
+}
+
 export interface TaskConfiguration {
   function: (data?: KeyValuePair<any>) => Promise<boolean>;
   data?: KeyValuePair<any>;
@@ -35,39 +41,41 @@ export interface TaskConfiguration {
   behavior?: TaskBehavior;
 }
 
-export interface TaskBehavior {
-  doNotBreakOnError?: boolean;
-  skipItemOnFail?: boolean;
-  maxReties?: number;
-}
-
 export interface JobConfig {
   name: string;
   tasks: TaskConfiguration[];
 }
 
-interface Task {
+interface Job {
   isBusy: boolean;
   isTerminating: boolean;
   config: JobConfig;
 }
 
-export default class TaskManager extends EventEmitter {
-  private tasks: KeyValuePair<Task>;
+interface JobResult {
+  processedCount: number;
+  skippedCount: number;
+  failedCount: number;
+  retryCount: number;
+  isTerminated: boolean;
+}
+
+export default class JobManager extends EventEmitter {
+  private jobs: KeyValuePair<Job>;
 
   private defaults: TaskBehavior;
 
   constructor(defaults: TaskBehavior = {}) {
     super();
-    this.tasks = {};
+    this.jobs = {};
     this.defaults = defaults;
   }
 
   addJob(config: JobConfig): void {
-    if (this.tasks[config.name]) {
+    if (this.jobs[config.name]) {
       throw new Error(ErrorTypes.TaskNameAlreadyInUse);
     }
-    this.tasks[config.name] = {
+    this.jobs[config.name] = {
       isBusy: false,
       isTerminating: false,
       config,
@@ -94,20 +102,28 @@ export default class TaskManager extends EventEmitter {
     });
   }
 
-  async execJob(taskName: string): Promise<void> {
-    const current = this.tasks[taskName];
+  async execJob(taskName: string): Promise<JobResult> {
+    const current = this.jobs[taskName];
     if (!current) {
       throw new Error(ErrorTypes.TaskNameNotExists);
     } else if (current.isBusy) {
       throw new Error(ErrorTypes.TaskBusy);
     }
     current.isTerminating = false;
+    const result: JobResult = {
+      processedCount: 0,
+      skippedCount: 0,
+      failedCount: 0,
+      retryCount: 0,
+      isTerminated: false,
+    };
     try {
       current.isBusy = true;
       let retryCount = 0;
       this.emit(Events.JobStarted, current.config.name);
       for (let i = 0; i < current.config.tasks.length; i += 1) {
         if (current.isTerminating) {
+          result.isTerminated = true;
           this.emit(Events.JobTerminated, current.config.name, i + 1);
           break;
         }
@@ -121,14 +137,18 @@ export default class TaskManager extends EventEmitter {
             if (retryCount < maxRetries) {
               i -= 1;
               retryCount += 1;
+              result.retryCount += 1;
               this.emit(Events.TaskRetrying, current.config.name, i + 1, retryCount);
             } else if (!skipOnFail) { // max retry is depleted and can no longer proceed unless skiped.
+              result.failedCount += 1;
               throw new Error(ErrorTypes.TaskMaxRetryReached);
             } else {
               // the task is skipped instead
               this.emit(Events.TaskSkipping, current.config.name, i + 1);
+              result.skippedCount += 1;
             }
           } else {
+            result.processedCount += 1;
             retryCount = 0;
           }
         } catch (err) {
@@ -136,16 +156,17 @@ export default class TaskManager extends EventEmitter {
           throw err; // you must rethrow the unhandled error to break this job
         }
       }
-      this.emit(Events.JobCompleted, current.config.name);
+      this.emit(Events.JobCompleted, current.config.name, result);
     } catch (err) {
       this.emit(Events.JobFailed, taskName, err);
     } finally {
       current.isBusy = false;
     }
+    return result;
   }
 
-  async terminateJob(taskName: string): Promise<void> {
-    const current = this.tasks[taskName];
+  async terminateJob(jobName: string): Promise<void> {
+    const current = this.jobs[jobName];
     if (!current) {
       throw new Error(ErrorTypes.TaskNameNotExists);
     } else if (!current.isBusy) {

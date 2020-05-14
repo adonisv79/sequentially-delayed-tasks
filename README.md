@@ -1,6 +1,6 @@
-# Sequentially Delayed Tasks (TaskManager)
+# Sequentially Delayed Tasks (JobManager)
 This utility allows you to perform a series of tasks (functions) that will run the next task after the next one completes (or if it fails... more on handling these below). 
-A group of "tasks" is called a "job" which we use to organize them. Note that this including most of my projects are written in **TypeScript**.
+A group of "tasks" is called a "job" which we use to organize them. Note that this including most of my projects are written in **TypeScript**. The Job manager allows for multiple jobs to be run in parallel as well.
 
 # Use case
 Why did I make it and where did I use this? well there are several encounters I had wherein certain "stuffs" will require some delays before you call the next one. 
